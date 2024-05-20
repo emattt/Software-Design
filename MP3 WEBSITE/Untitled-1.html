@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ematify</title>
+    <link rel="stylesheet" href="mystyle.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <script src="https://kit.fontawesome.com/1d3b8b90fb.js" crossorigin="anonymous"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Sen:wght@400..800&display=swap" rel="stylesheet">
+
+</head>
+<body>
+    <div class="container">
+        <div class="music-player">
+            <h1 class="title">🎧Ematify</h1>
+            <img src="picmp3.jpg" id="musicImg" class="music-img">
+            <div id="trackInfo">
+                <h1 id="trackTitle">Circles</h1>
+                <p id="trackArtist">Post Malone</p>
+            </div>
+
+            <audio id="song">
+                <source src="music/Post Malone - Circles.mp3" type="audio/mpeg">
+            </audio>
+
+            <input type="range" value="0" id="progress">
+            <div class="slider_container">
+                <i class="fa fa-volume-down" id="volDown" onclick="decreaseVolume()"></i>
+                <input type="range" min="1" max="100" value="99" class="volume_slider" onchange="setVolume()">
+                <i class="fa fa-volume-up" id="volUp" onclick="increaseVolume()"></i>
+                <i class="fa fa-volume-off" id="muteBtn" onclick="muteVolume()"></i>
+            </div>
+            <div class="controls">
+                <div onclick="prevTrack()">
+                    <i class="fa-solid fa-backward"></i>
+                </div>
+
+                <div onclick="playPause()">
+                    <i class="fa-solid fa-play" id="ctrlIcon"></i>
+                </div>
+
+                <div onclick="nextTrack()">
+                    <i class="fa-solid fa-forward"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        let progress = document.getElementById("progress");
+        let song = document.getElementById("song");
+        let ctrlIcon = document.getElementById("ctrlIcon");
+        let trackTitleElement = document.getElementById("trackTitle");
+        let trackArtistElement = document.getElementById("trackArtist");
+        let volumeSlider = document.querySelector(".volume_slider");
+        let muteBtn = document.getElementById("muteBtn");
+        let prevVolume = 1;
+        let musicImg = document.getElementById("musicImg");
+
+        let tracks = [
+            { title: "Circles", artist: "Post Malone", src: "music/Post Malone - Circles.mp3" },
+            { title: "Decode", artist: "Paramore", src: "music/Paramore_ Decode [OFFICIAL VIDEO].mp3" },
+            { title: "Somewhere I Belong", artist: "Linkin Park", src: "music/Somewhere I Belong (Official Music Video) [4K UPGRADE]  Linkin Park.mp3" },
+            { title: "You'll Be Safe Here", artist: "Rico Blanco", src: "music/Rico Blanco - Youll Be Safe Here (Official Lyric Video).mp3" },
+            { title: "Numb", artist: "Linkin Park", src: "music/Numb (Official Music Video) [4K UPGRADE]  Linkin Park.mp3" },
+            { title: "Welcome To The Black Parade", artist: "My Chemical Romance", src: "music/My Chemical Romance - Welcome To The Black Parade [Official Music Video] [HD].mp3" },
+            { title: "21 Guns", artist: "Green Day", src: "music/Green Day - 21 Guns [Official Music Video].mp3" },
+            { title: "End Of Beginning", artist: "Djo", src: "music/Djo - End Of Beginning (Lyrics)  and when i'm back in chicago i feel it.mp3" },
+            { title: "Viva La Vida", artist: "Coldplay", src: "music/Coldplay - Viva La Vida (Official Video).mp3" },
+            { title: "Thunder", artist: "Boys Like Girls", src: "music/Boys Like Girls - Thunder.mp3" },
+        ];
+
+        let currentTrackIndex = 0;
+
+        song.onloadedmetadata = function(){
+            progress.max = song.duration;
+            progress.value = song.currentTime;
+        }
+
+        let rotation = 0;
+        let isRotating = false;
+        let animationFrame;
+
+        function playPause(){
+            if(ctrlIcon.classList.contains("fa-pause")){
+                song.pause();
+                ctrlIcon.classList.remove("fa-pause");
+                ctrlIcon.classList.add("fa-play");
+                cancelAnimationFrame(animationFrame);
+                isRotating = false;
+            }
+            else{
+                song.play();
+                ctrlIcon.classList.add("fa-pause");
+                ctrlIcon.classList.remove("fa-play");
+                isRotating = true;
+                rotateImage();
+            }
+        }
+
+        if(song.play()){
+            setInterval(()=>{progress.value = song.currentTime;}, 500);
+        }
+
+        progress.onchange = function(){
+            song.play();
+            song.currentTime = progress.value;
+            ctrlIcon.classList.add("fa-pause");
+            ctrlIcon.classList.remove("fa-play");
+            isRotating = true;
+            rotateImage();
+        }
+
+        function nextTrack() {
+            currentTrackIndex = (currentTrackIndex + 1) % tracks.length;
+            song.src = tracks[currentTrackIndex].src;
+            trackTitleElement.innerText = tracks[currentTrackIndex].title;
+            trackArtistElement.innerText = tracks[currentTrackIndex].artist;
+            song.play();
+            ctrlIcon.classList.remove("fa-play");
+            ctrlIcon.classList.add("fa-pause");
+            isRotating = true;
+            rotation = 0; 
+            rotateImage();
+        }
+
+        function prevTrack() {
+            currentTrackIndex = (currentTrackIndex - 1 + tracks.length) % tracks.length;
+            song.src = tracks[currentTrackIndex].src;
+            trackTitleElement.innerText = tracks[currentTrackIndex].title;
+            trackArtistElement.innerText = tracks[currentTrackIndex].artist;
+            song.play();
+            ctrlIcon.classList.remove("fa-play");
+            ctrlIcon.classList.add("fa-pause");
+            isRotating = true;
+            rotation = 0; 
+            rotateImage();
+        }
+
+        function setVolume() {
+            song.volume = volumeSlider.value / 100;
+            if (song.volume === 0) {
+                muteBtn.classList.remove("fa-volume-up");
+                muteBtn.classList.add("fa-volume-off");
+            } else {
+                muteBtn.classList.remove("fa-volume-off");
+                muteBtn.classList.add("fa-volume-up");
+            }
+        }
+
+        function muteVolume() {
+            if (song.volume > 0) {
+                prevVolume = song.volume;
+                song.volume = 0;
+                volumeSlider.value = 0;
+                muteBtn.classList.remove("fa-volume-up");
+                muteBtn.classList.add("fa-volume-off");
+            } else {
+                song.volume = prevVolume;
+                volumeSlider.value = prevVolume * 100;
+                muteBtn.classList.remove("fa-volume-off");
+                muteBtn.classList.add("fa-volume-up");
+            }
+        }
+
+        function increaseVolume() {
+            if (song.volume < 1) {
+                song.volume += 0.1;
+                volumeSlider.value = song.volume * 100;
+            }
+        }
+
+        function decreaseVolume() {
+            if (song.volume > 0) {
+                song.volume -= 0.1;
+                volumeSlider.value = song.volume * 100;
+            }
+        }
+
+        song.onended = function() {
+            nextTrack();
+            isRotating = true;
+            rotateImage();
+        };
+
+        function rotateImage() {
+            if (isRotating) {
+                rotation += 0.09; 
+                musicImg.style.transform = `rotate(${rotation}deg)`;
+                animationFrame = requestAnimationFrame(rotateImage);
+            }
+        }
+    </script>
+</body>
+</html>
